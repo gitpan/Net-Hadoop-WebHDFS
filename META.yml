@@ -7,10 +7,12 @@ build_requires:
   Test::Deep: 0
   Test::More: 0
 configure_requires:
-  ExtUtils::MakeMaker: 6.36
-distribution_type: module
-dynamic_config: 1
-generated_by: 'Module::Install version 1.04'
+  CPAN::Meta: 0
+  CPAN::Meta::Prereqs: 0
+  ExtUtils::MakeMaker: 0
+  Module::Build: 0.38
+dynamic_config: 0
+generated_by: 'Minilla/v0.6.6, CPAN::Meta::Converter version 2.120921'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -18,8 +20,17 @@ meta-spec:
 name: Net-Hadoop-WebHDFS
 no_index:
   directory:
-    - inc
     - t
+    - xt
+    - inc
+    - share
+    - eg
+    - examples
+    - author
+provides:
+  Net::Hadoop::WebHDFS:
+    file: lib/Net/Hadoop/WebHDFS.pm
+    version: 0.4
 requires:
   Furl: 0
   JSON: 0
@@ -29,6 +40,9 @@ requires:
   Try::Tiny: 0
   URI: 0
 resources:
-  license: http://dev.perl.org/licenses/
+  bugtracker: https://github.com/tagomoris/Net-Hadoop-WebHDFS/issues
+  homepage: https://github.com/tagomoris/Net-Hadoop-WebHDFS
   repository: git://github.com/tagomoris/Net-Hadoop-WebHDFS.git
-version: 0.3
+version: 0.4
+x_contributors:
+  - 'TAGOMORI Satoshi <tagomoris@gmail.com>'

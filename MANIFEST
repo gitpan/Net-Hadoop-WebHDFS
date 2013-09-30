@@ -1,16 +1,10 @@
-.shipit
+Build.PL
 Changes
-inc/Module/Install.pm
-inc/Module/Install/Base.pm
-inc/Module/Install/Can.pm
-inc/Module/Install/Fetch.pm
-inc/Module/Install/Makefile.pm
-inc/Module/Install/Metadata.pm
-inc/Module/Install/Repository.pm
-inc/Module/Install/Win32.pm
-inc/Module/Install/WriteAll.pm
-lib/Net/Hadoop/WebHDFS.pm
-Makefile.PL
-MANIFEST			This list of files
+LICENSE
+META.json
 META.yml
+README.md
+cpanfile
+lib/Net/Hadoop/WebHDFS.pm
 t/Net-Hadoop-WebHDFS.t
+MANIFEST
