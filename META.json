@@ -61,7 +61,7 @@
    "provides" : {
       "Net::Hadoop::WebHDFS" : {
          "file" : "lib/Net/Hadoop/WebHDFS.pm",
-         "version" : "0.4"
+         "version" : "0.5"
       }
    },
    "release_status" : "stable",
@@ -75,7 +75,7 @@
          "web" : "https://github.com/tagomoris/Net-Hadoop-WebHDFS"
       }
    },
-   "version" : "0.4",
+   "version" : "0.5",
    "x_contributors" : [
       "TAGOMORI Satoshi <tagomoris@gmail.com>"
    ]

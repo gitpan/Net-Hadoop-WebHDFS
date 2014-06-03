@@ -1,5 +1,9 @@
 Revision history for Perl extension Net-Hadoop-WebHDFS
 
+0.5 2014-06-03T10:05:18Z
+
+   - support Namenode HA
+
 0.4 2013-09-30T06:37:07Z
 
    - new dist with Minilla

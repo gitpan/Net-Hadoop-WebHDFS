@@ -9,7 +9,7 @@ use JSON::XS qw//;
 use Furl;
 use URI;
 
-our $VERSION = "0.4";
+our $VERSION = "0.5";
 
 our %OPT_TABLE = ();
 
@@ -18,11 +18,14 @@ sub new {
     my $self = +{
         host => $opts{host} || 'localhost',
         port => $opts{port} || 50070,
+        standby_host => $opts{standby_host},
+        standby_port => ($opts{standby_port} || $opts{port} || 50070),
         httpfs_mode => $opts{httpfs_mode} || 0,
         username => $opts{username},
         doas => $opts{doas},
         useragent => $opts{useragent} || 'Furl Net::Hadoop::WebHDFS (perl)',
         timeout => $opts{timeout} || 10,
+        under_failover => 0,
     };
     $self->{furl} = Furl::HTTP->new(agent => $self->{useragent}, timeout => $self->{timeout}, max_redirects => 0);
     return bless $self, $this;
@@ -260,20 +263,30 @@ sub build_path {
     $self->api_path($path) . $u->path_query; # path_query() #=> '?foo=1&bar=2'
 }
 
+sub connect_to {
+    my $self = shift;
+    if ($self->{under_failover}) {
+        return ($self->{standby_host}, $self->{standby_port});
+    }
+    return ($self->{host}, $self->{port});
+}
+
 our %REDIRECTED_OPERATIONS = (APPEND => 1, CREATE => 1, OPEN => 1, GETFILECHECKSUM => 1);
 sub operate_requests {
     my ($self, $method, $path, $op, $params, $payload) = @_;
+
+    my ($host, $port) = $self->connect_to();
 
     my $headers = []; # or undef ?
     if ($self->{httpfs_mode} or not $REDIRECTED_OPERATIONS{$op}) {
         if ($self->{httpfs_mode} and defined($payload) and length($payload) > 0) {
             $headers = ['Content-Type' => 'application/octet-stream'];
         }
-        return $self->request($self->{host}, $self->{port}, $method, $path, $op, $params, $payload, $headers);
+        return $self->request($host, $port, $method, $path, $op, $params, $payload, $headers);
     }
 
     # pattern for not httpfs and redirected by namenode
-    my $res = $self->request($self->{host}, $self->{port}, $method, $path, $op, $params, undef);
+    my $res = $self->request($host, $port, $method, $path, $op, $params, undef);
     unless ($res->{code} >= 300 and $res->{code} <= 399 and $res->{location}) {
         my $code = $res->{code};
         my $body = $res->{body};
@@ -321,7 +334,24 @@ sub request {
 
     if ($code == 400) { croak "ClientError: $errmsg"; }
     elsif ($code == 401) { croak "SecurityError: $errmsg"; }
-    elsif ($code == 403) { croak "IOError: $errmsg"; }
+    elsif ($code == 403) {
+        if ($errmsg =~ /org\.apache\.hadoop\.ipc\.StandbyException/) {
+            if ($self->{httpfs_mode} || not defined($self->{standby_host})) {
+                # failover is disabled
+            } elsif ($self->{retrying}) {
+                # more failover is prohibited
+                $self->{retrying} = 0;
+            } else {
+                $self->{under_failover} = not $self->{under_failover};
+                $self->{retrying} = 1;
+                my ($next_host, $next_port) = $self->connect_to();
+                my $val = $self->request($next_host, $next_port, $method, $path, $op, $params, $payload, $header);
+                $self->{retrying} = 0;
+                return $val;
+            }
+        }
+        croak "IOError: $errmsg";
+    }
     elsif ($code == 404) { croak "FileNotFoundError: $errmsg"; }
     elsif ($code == 500) { croak "ServerError: $errmsg"; }
 
@@ -371,6 +401,10 @@ I<%args> might be:
 =item host :Str = "namenode.local"
 
 =item port :Int = 50070
+
+=item standby_host :Str = "standby.namenode.local"
+
+=item standby_port :Int = 50070
 
 =item username :Str = "hadoop"
 
